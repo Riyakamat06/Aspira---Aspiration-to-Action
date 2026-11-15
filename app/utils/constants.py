@@ -23,10 +23,10 @@ NOTE
 TASK_PENDING = "pending"        # task created, no proof given yet
 TASK_SUBMITTED = "submitted"    # user gave proof, waiting to be checked
 TASK_COMPLETED = "completed"    # proof accepted; counts in graph and score
-TASK_MISSED = "missed"          # due date passed; used by re-planning
+TASK_OVERDUE = "overdue"          # due date passed; used by re-planning
 
 # Every allowed status, so other files can check "is this status valid?"
-TASK_STATUSES = [TASK_PENDING, TASK_SUBMITTED, TASK_COMPLETED, TASK_MISSED]
+TASK_STATUSES = [TASK_PENDING, TASK_SUBMITTED, TASK_COMPLETED, TASK_OVERDUE]
 
 # --- Task types ----------------------------------------------------
 # The four kinds of task defined in the project synopsis

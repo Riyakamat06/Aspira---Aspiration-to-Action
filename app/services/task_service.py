@@ -12,9 +12,9 @@ FUNCTIONS
     check_status_change(current, new) -> raises an error if not allowed
 
 STATUS RULES (from constants.py)
-    pending   -> submitted (proof given) or missed (due date passed)
+    pending   -> submitted (proof given) or overdue (due date passed)
     submitted -> completed (proof accepted) or pending (proof rejected)
-    missed    -> pending (deadline moved) or submitted (late proof)
+    overdue   -> pending (deadline moved) or submitted (late proof)
     completed -> no further changes; a finished task stays finished
 
 WHY THE RULES EXIST
@@ -31,14 +31,14 @@ from app.utils.constants import (                    # the shared status words
     TASK_PENDING,
     TASK_SUBMITTED,
     TASK_COMPLETED,
-    TASK_MISSED,
+    TASK_OVERDUE,
 )
 
 # For each status, the list of statuses it is allowed to change to.
 ALLOWED_CHANGES = {
-    TASK_PENDING: [TASK_SUBMITTED, TASK_MISSED],     # not started -> proof given, or late
+    TASK_PENDING: [TASK_SUBMITTED, TASK_OVERDUE],     # not started -> proof given, or late
     TASK_SUBMITTED: [TASK_COMPLETED, TASK_PENDING],  # proof accepted, or rejected
-    TASK_MISSED: [TASK_PENDING, TASK_SUBMITTED],     # rescheduled, or late proof
+    TASK_OVERDUE: [TASK_PENDING, TASK_SUBMITTED],     # rescheduled, or late proof
     TASK_COMPLETED: [],                              # finished tasks do not change
 }
 

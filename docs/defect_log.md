@@ -19,7 +19,5 @@ re-tested.
 
 ## Defects
 
-| ID | Date found | Found by | File or feature | What went wrong | Severity | Status | Fixed in | Re-tested by |
-|---|---|---|---|---|---|---|---|---|
-| DEF-001 | 2026-11-15 | Sonali | `app/schemas/task_schema.py` | The file was committed empty, so importing `TaskCreate` failed with an ImportError | High | Fixed | Commit "Add dream and task schema content" | |
-| DEF-002 | | | | | | | | |
+| DEF-002 | [date] | Sonali | `app/schemas/dream_schema.py` | The file was committed empty, so `DreamCreate` could not be imported | High | Fixed | Commit "Add dream and task schema content" | |
+| DEF-003 | [date] | Sonali | `constants.py`, `task_service.py` | The status word "missed" did not match the SRS, which says "overdue" | Medium | Fixed | Commit "Use SRS status word overdue" | |

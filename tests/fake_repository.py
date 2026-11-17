@@ -2,20 +2,21 @@
 fake_repository.py - an in-memory stand-in for the database, for TESTS ONLY.
 
 PURPOSE
-    Lets the dream and journal services be tested before Ananya's
-    database code exists. Records live in a Python dictionary and are
-    wiped when the program stops. It is kept in tests/ so it can never
-    be mistaken for real application code.
+    Lets the services and routers be tested before Ananya's database
+    code exists. Records live in a Python dictionary and are wiped when
+    the program stops. It is kept in tests/ so it can never be mistaken
+    for real application code.
 
 METHODS
-    create(**fields) -> saves a record, gives it an id and a created_at
-    get(item_id)     -> returns the record, or None if it does not exist
-    list_all()       -> returns every record as a list
-    delete(item_id)  -> removes the record; True if it existed, else False
+    create(**fields)       -> saves a record, gives it an id and a created_at
+    get(item_id)           -> returns the record, or None if it does not exist
+    list_all()             -> returns every record as a list
+    update(item_id, **f)   -> changes fields on a record; None if it does not exist
+    delete(item_id)        -> removes the record; True if it existed, else False
 
 NOTE FOR THE REAL DATABASE
-    Ananya's repositories need methods with these same four names,
-    returning objects with an .id, so the services work unchanged.
+    Ananya's repositories need methods with these same names, returning
+    objects with an .id, so the services work unchanged.
 """
 
 from datetime import datetime       # used to stamp when a record was created
@@ -41,6 +42,15 @@ class InMemoryRepository:
     def list_all(self):
         # a new list, so callers cannot change the store by accident
         return list(self._items.values())
+
+    def update(self, item_id, **fields):
+        # change the given fields on a saved record; None if it does not exist
+        item = self._items.get(item_id)
+        if item is None:
+            return None
+        for name, value in fields.items():
+            setattr(item, name, value)      # set each field by its name
+        return item
 
     def delete(self, item_id):
         # pop removes the record and returns it, or None if it was missing

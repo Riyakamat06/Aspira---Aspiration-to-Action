@@ -19,5 +19,5 @@ re-tested.
 
 ## Defects
 
-| DEF-002 | [date] | Sonali | `app/schemas/dream_schema.py` | The file was committed empty, so `DreamCreate` could not be imported | High | Fixed | Commit "Add dream and task schema content" | |
-| DEF-003 | [date] | Sonali | `constants.py`, `task_service.py` | The status word "missed" did not match the SRS, which says "overdue" | Medium | Fixed | Commit "Use SRS status word overdue" | |
+| DEF-002 | YYYY-MM-DD | Sonali | `app/schemas/dream_schema.py` | The file was committed empty, so `DreamCreate` could not be imported | High | Fixed | Commit "Add dream and task schema content" | |
+| DEF-003 | YYYY-MM-DD | Sonali | `constants.py`, `task_service.py` | The status word "missed" did not match the SRS, which says "overdue" | Medium | Fixed | Commit "Use SRS status word overdue" | |

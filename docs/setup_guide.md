@@ -29,10 +29,10 @@ When it works, the prompt starts with `(.venv)`.
 
 ### 3. Install the packages
 
-    pip install -r requirements.txt
+    pip install -r backend/requirements.txt
 
 ### 4. Run the server
-
+    cd backend
     uvicorn app.main:app --reload
 
 The server runs at http://127.0.0.1:8000. In a Codespace, open the forwarded
@@ -44,7 +44,7 @@ port in the browser.
 - Open `/docs` to see the automatically generated list of endpoints.
 
 ### 6. Run the tests
-
+    cd backend
     pytest
 
 All tests should pass.

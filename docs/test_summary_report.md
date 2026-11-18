@@ -32,6 +32,7 @@ been tested yet.
 | Journal router | `journal_router.py` | Add 201, unknown dream 404, list returns the entry | Pass |
 | Task router | `task_router.py` | View works, completed refused 400, submitted accepted 200, unknown status 422, missing task 404 | Pass |
 | Analytics router | `analytics_router.py` | Weekly data matches the agreed shape; a missing dream gives 404 | Pass |
+| Roadmap schema | `roadmap_schema.py` | A roadmap with a milestone and a task is accepted; the source "copied" is rejected | Pass |
 | Automated suite | `tests/` | `pytest` on `main`: 1 passed (`test_health.py`). The checks above are not yet part of it | Pass (1 test) |
 
 ## 4. Defects found
@@ -60,6 +61,7 @@ The full log is in `docs/defect_log.md`.
 - Evidence verification, readiness score, re-planning, reminders and
   resources were not part of this work. The file structure assigns them to
   Riya or marks them "Later".
+  - Deleting a dream does not yet delete its roadmaps, tasks, evidence and analytics (SRS FR-MD-04). This needs a cascading delete in M1.
 
 ## 6. Conclusion
 The files covered here behaved as specified in the checks above. The next

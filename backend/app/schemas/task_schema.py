@@ -29,7 +29,7 @@ from app.utils.constants import TASK_TYPES, TASK_STATUSES       # the allowed va
 
 
 class TaskCreate(BaseModel):
-    roadmap_id: int                                  # which roadmap this task belongs to
+    milestone_id: int                                  # which milestone this task belongs to
     title: str = Field(min_length=1, max_length=200) # the task's name
     task_type: str                                   # project, course, learning or practical
     due_date: date                                   # the deadline
@@ -60,8 +60,8 @@ class TaskResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int                # unique number of the task
-    roadmap_id: int        # the roadmap it belongs to
+    milestone_id: int        # the milestone it belongs to
     title: str             # the task's name
-    task_type: str         # its type
+    task_type: str | None = None   # its type (not in the M1 model yet)
     status: str            # its current status
     due_date: date         # its deadline

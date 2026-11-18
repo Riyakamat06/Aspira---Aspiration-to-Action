@@ -1,0 +1,4 @@
+venv/
+aspira.db
+__pycache__/
+.pytest_cache/

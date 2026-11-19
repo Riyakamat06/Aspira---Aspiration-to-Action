@@ -33,6 +33,32 @@ Run this from the project folder (the one that contains `backend` and `docs`):
 
     pip install -r backend/requirements.txt
 
+### 3b. Create the settings file
+The app needs two secret settings before it can start. They live in a file
+called `backend/.env`. That file is never committed, because it is listed in
+`.gitignore`.
+
+1. Create a new file called `.env` inside the `backend` folder.
+2. Put these two lines in it:
+
+       SECRET_KEY=replace-with-at-least-32-random-characters
+       GEMINI_API_KEY=replace-with-your-gemini-api-key
+
+3. For `SECRET_KEY`, any random text of 32 or more characters works. To make one:
+
+       python -c "import secrets; print(secrets.token_urlsafe(48))"
+
+4. For `GEMINI_API_KEY`, use the team's Gemini key (ask Riya for it). Never
+   write a real key in a file that is committed, and never paste it in a chat.
+5. Check that the settings load:
+
+       cd backend
+       python -c "from app.config import settings; print('settings ok')"
+
+Without this file the app stops with "2 validation errors for Settings",
+naming `secret_key` and `gemini_api_key`. The tests do not need this file;
+they set their own fake values.
+
 ### 4. Run the server
 
     cd backend
@@ -63,6 +89,7 @@ All other tests should pass.
 |---|---|---|
 | `uvicorn: command not found` | Packages not installed, or the virtual environment is not active | Activate `.venv`, then run `pip install -r backend/requirements.txt` from the project folder |
 | `No module named 'app...'` | A folder is missing, a file is empty, or the command was not run from inside `backend` | Run `cd backend` first, check that the folder has an `__init__.py`, and check the file's size with `wc -l` |
+| `2 validation errors for Settings` | The file `backend/.env` is missing | Create it as described in step 3b |
 | `cd: backend: No such file or directory` | You are already inside `backend` | Skip the `cd backend` line, or run `cd ..` to go back to the project folder |
 | 404 Not Found at the home address | The app has no page at `/` | Add `/health` or `/docs` to the address |
 | Terminal shows `(END)` or `:` | Git opened its reader | Press `q` |

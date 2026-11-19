@@ -1,0 +1,197 @@
+
+/* Common component styling */
+.evidence-uploader,
+.reminder-settings,
+.replan-proposal,
+.resource-list,
+.journal-editor,
+.chat-window,
+.disclaimer-banner,
+.confirm-dialog {
+  background: linear-gradient(145deg, #ffffff, #f8f3ff);
+  padding: 25px;
+  border-radius: 18px;
+  margin: 20px 0;
+  border: 1px solid #eadcf8;
+  box-shadow: 0 6px 20px rgba(65, 35, 95, 0.08);
+  color: #34204d;
+}
+
+.evidence-uploader h3,
+.reminder-settings h3,
+.replan-proposal h3,
+.resource-list h3 {
+  color: #49316d;
+  margin-top: 0;
+  font-size: 21px;
+}
+
+.evidence-uploader p,
+.reminder-settings p,
+.replan-proposal p,
+.resource-list p {
+  color: #766786;
+  line-height: 1.6;
+}
+
+/* Form elements */
+.evidence-uploader form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.evidence-uploader label,
+.reminder-settings label {
+  font-weight: 600;
+  color: #49316d;
+}
+
+.evidence-uploader input,
+.evidence-uploader textarea,
+.reminder-settings select,
+.reminder-settings input[type="time"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #ddcbed;
+  border-radius: 10px;
+  background: white;
+  color: #34204d;
+  font: inherit;
+}
+
+.evidence-uploader textarea {
+  resize: vertical;
+}
+
+/* Buttons */
+.evidence-uploader button,
+.reminder-settings button,
+.proposal-actions button {
+  background: linear-gradient(120deg, #65458b, #8b5db5);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.evidence-uploader button:hover,
+.reminder-settings button:hover,
+.proposal-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(73, 49, 109, 0.2);
+}
+
+/* Reminder settings */
+.reminder-settings > div {
+  margin: 18px 0;
+}
+
+.reminder-settings input[type="checkbox"] {
+  width: auto;
+  margin-right: 10px;
+}
+
+/* Replan proposal */
+.proposal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.proposal-header span {
+  background: #eee0ff;
+  color: #65458b;
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-content {
+  background: #f3eaff;
+  padding: 18px;
+  border-radius: 14px;
+  margin: 18px 0;
+}
+
+.proposal-content h4 {
+  color: #49316d;
+}
+
+.proposal-content li {
+  margin: 10px 0;
+  color: #5d4b70;
+}
+
+.proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.proposal-actions button:last-child {
+  background: #eee7f5;
+  color: #49316d;
+}
+
+/* Learning resources */
+.resource-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.resource-card {
+  background: white;
+  border: 1px solid #eadcf8;
+  border-radius: 14px;
+  padding: 18px;
+  transition: 0.3s ease;
+}
+
+.resource-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 7px 18px rgba(65, 35, 95, 0.1);
+}
+
+.resource-card h4 {
+  color: #49316d;
+}
+
+.resource-card a {
+  display: inline-block;
+  margin-top: 12px;
+  color: #7545a3;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.resource-card a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .evidence-uploader,
+  .reminder-settings,
+  .replan-proposal,
+  .resource-list {
+    padding: 18px;
+  }
+
+  .proposal-actions {
+    flex-direction: column;
+  }
+
+  .proposal-actions button {
+    width: 100%;
+  }
+}

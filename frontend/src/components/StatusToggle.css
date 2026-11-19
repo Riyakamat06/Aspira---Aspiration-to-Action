@@ -1,0 +1,57 @@
+
+.status-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px;
+  background: #f4effa;
+  border-radius: 14px;
+  width: fit-content;
+}
+
+.status-option {
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  background: transparent;
+  color: #756486;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-option:hover:not(:disabled) {
+  background: #e9def5;
+}
+
+.status-option.selected.pending {
+  background: #fff0d8;
+  color: #a66b18;
+}
+
+.status-option.selected.in_progress {
+  background: #e8ddfa;
+  color: #7548a5;
+}
+
+.status-option.selected.completed {
+  background: #ddf3e5;
+  color: #287b49;
+}
+
+.status-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .status-toggle {
+    width: 100%;
+  }
+
+  .status-option {
+    flex: 1;
+    padding: 9px 7px;
+  }
+}

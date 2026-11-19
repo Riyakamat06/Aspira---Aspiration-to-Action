@@ -6,13 +6,15 @@ What it is for:
     made by the AI or entered by the user (the synopsis supports both).
 
 Who uses it:
-    roadmap_repository.py, analytics_repository.py.
+    roadmap_repository.py, analytics_repository.py, Riya's roadmap services.
 
 What it contains:
-    Roadmap - columns: id, dream_id, title, summary, source, created_at.
+    Roadmap - columns: id, dream_id, title, summary, intake_json, source, created_at.
 
 Note:
     When a dream is deleted, its roadmaps are deleted too (ondelete CASCADE).
+    intake_json keeps the learner's intake answers as JSON text, so a
+    roadmap can be regenerated without asking the questions again.
 """
 
 from datetime import datetime, timezone
@@ -32,6 +34,7 @@ class Roadmap(Base):
     )
     title: Mapped[str] = mapped_column(String(200))
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    intake_json: Mapped[str | None] = mapped_column(Text, nullable=True)  # learner's intake answers as JSON text
     source: Mapped[str] = mapped_column(String(20), default="ai")  # "ai" or "user"
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

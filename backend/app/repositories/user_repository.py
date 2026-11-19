@@ -11,10 +11,11 @@ What it contains:
     create_user(db, full_name, email, hashed_password) -> User
     get_user_by_email(db, email) -> User or None
     get_user_by_id(db, user_id) -> User or None
+    count_users(db) -> int (used for the 50-user beta cap)
     delete_user(db, user_id) -> True if deleted, False if not found
 """
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.user import User
@@ -37,6 +38,11 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     """Find one user by id."""
     return db.get(User, user_id)
+
+
+def count_users(db: Session) -> int:
+    """How many users exist (used for the 50-user beta cap)."""
+    return db.scalar(select(func.count(User.id))) or 0
 
 
 def delete_user(db: Session, user_id: int) -> bool:

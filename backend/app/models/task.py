@@ -10,7 +10,8 @@ Who uses it:
     (its field names must match this model).
 
 What it contains:
-    Task - columns: id, milestone_id, title, task_type, status, due_date.
+    Task - columns: id, milestone_id, title, task_type, status, due_date,
+    description, estimated_hours.
 
 Note:
     Allowed task_type: project, course, learning, practical.
@@ -21,7 +22,7 @@ Note:
 
 from datetime import date
 
-from sqlalchemy import Date, ForeignKey, String
+from sqlalchemy import Date, Float, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -38,3 +39,5 @@ class Task(Base):
     task_type: Mapped[str] = mapped_column(String(20))  # project / course / learning / practical
     status: Mapped[str] = mapped_column(String(20), default="pending")  # new tasks start as pending
     due_date: Mapped[date] = mapped_column(Date)  # TaskCreate requires a due date
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)  # AI-written explanation of the task
+    estimated_hours: Mapped[float | None] = mapped_column(Float, nullable=True)  # AI estimate of time needed

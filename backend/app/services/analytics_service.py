@@ -2,35 +2,34 @@
 analytics_service.py - calculations for the weekly progress graph (feature 7).
 
 PURPOSE
-    Turns a list of tasks into one row per week, showing how many tasks
+    Turns a dream's tasks into one row per week, showing how many tasks
     were due and how many were completed. The result matches the
-    WeeklyProgress shape in analytics_schema.py, which Tanushree's chart reads.
-
-    This first version contains only the calculation, which needs no
-    database. Later, a small function will fetch the tasks through
-    Ananya's analytics_repository and pass them in here.
+    WeeklyAnalyticsResponse shape in analytics_schema.py, which Tanushree's
+    chart reads.
 
 FUNCTIONS
-    build_weekly_progress(tasks) -> a list of WeeklyProgress, oldest week first
+    build_weekly_progress(tasks)             -> list of WeeklyProgress, oldest week first
+    weekly_for_dream(db, user_id, dream_id)  -> the full response for one dream
 
-INPUT
-    `tasks` is any list of objects that have two attributes:
-        due_date -> a date
-        status   -> a status word from constants.py
-
-RULE
-    A task counts as "completed" only when its status is "completed",
-    meaning its proof was accepted. Tasks that are only "submitted"
-    do not count yet.
+RULES
+    - A task counts as "completed" only when its status is "completed",
+      meaning its proof was accepted. Tasks that are only "submitted"
+      do not count yet.
+    - Only the NEWEST roadmap of the dream is counted. Ananya's Roadmap
+      table has no "active" flag, so the roadmap with the highest id is
+      treated as the current one. Counting older roadmaps too would count
+      the same goals twice after a regeneration.
+    - The dream must belong to the user, otherwise NotFoundError (404).
 
 WHO USES IT
     - analytics_router.py -> sends the result to the website
-    - readiness_service.py -> may reuse the counts
 """
 
-from app.schemas.analytics_schema import WeeklyProgress   # the agreed output shape
-from app.utils.constants import TASK_COMPLETED            # the "completed" status word
-from app.utils.date_utils import get_week_start           # finds the Monday of a week
+from app.repositories import roadmap_repository, task_repository   # Ananya's database functions
+from app.schemas.analytics_schema import WeeklyAnalyticsResponse, WeeklyProgress
+from app.services import dream_service                              # checks the dream is the user's
+from app.utils.constants import TASK_COMPLETED                      # the "completed" status word
+from app.utils.date_utils import get_week_start                     # finds the Monday of a week
 
 
 def build_weekly_progress(tasks) -> list[WeeklyProgress]:
@@ -55,3 +54,15 @@ def build_weekly_progress(tasks) -> list[WeeklyProgress]:
             )
         )
     return result
+
+
+def weekly_for_dream(db, user_id: int, dream_id: int) -> WeeklyAnalyticsResponse:
+    """Return the weekly progress of one of this user's dreams."""
+    dream_service.get_dream(db, user_id, dream_id)      # 404 if missing or not theirs
+    roadmaps = roadmap_repository.list_roadmaps(db, dream_id=dream_id)
+    if roadmaps:
+        newest = max(roadmaps, key=lambda r: r.id)      # the current roadmap
+        tasks = task_repository.list_tasks_for_roadmap(db, roadmap_id=newest.id)
+    else:
+        tasks = []                                      # no roadmap yet, so no weeks
+    return WeeklyAnalyticsResponse(dream_id=dream_id, weeks=build_weekly_progress(tasks))

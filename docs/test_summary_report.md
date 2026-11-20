@@ -13,9 +13,7 @@ what has not been tested yet.
 
 ## 2. Environment
 - GitHub Codespaces, Python 3.14, FastAPI, Pydantic 2.14, pytest 9.2.0
-- A temporary in-memory store (`backend/tests/fake_repository.py`) stands in
-  for the database, because the M1 models and repositories are not yet
-  available in `main`.
+- The router and service tests (`test_routers_db.py`) use a temporary SQLite database in memory with Ananya's models and repositories; `aspira.db` is never touched. The earlier fake store (`backend/tests/fake_repository.py`) is no longer used by the routers.
 - A fake AI stands in for Gemini in every test. No real model was called.
 
 ## 3. What was checked
@@ -30,16 +28,17 @@ what has not been tested yet.
 | Auth and chat schemas | `auth_schema.py`, `chat_schema.py` | A valid sign-up is accepted and its email lower-cased; an email with no "@" is rejected; a valid chat message is accepted | Pass |
 | Status rules | `task_service.py` | pending to completed is refused (SRS FR-EV-01); pending to overdue and pending to submitted are allowed | Pass |
 | Weekly progress | `analytics_service.py` | 3 tasks gave 2 due / 1 completed in one week and 1 due / 1 completed in the next | Pass |
-| Dream and journal logic | `dream_service.py`, `journal_service.py` | Add, list and delete a dream; a journal entry for a missing dream is refused | Pass |
-| Dream router | `dream_router.py` | Add 201, list 200, missing 404, delete 204, empty title 422 | Pass |
-| Journal router | `journal_router.py` | Add 201, unknown dream 404, list returns the entry | Pass |
-| Task router | `task_router.py` | View works, completed refused 400, submitted accepted 200, unknown status 422, missing task 404 | Pass |
-| Analytics router | `analytics_router.py` | Weekly data matches the agreed shape; a missing dream gives 404 | Pass |
+| Dream, journal, task and analytics services and routers | `test_routers_db.py` | 18 tests through FastAPI on a temporary SQLite database with Ananya's repositories: add, list, view, delete; journal order and filter; allowed status change; completed refused (FR-EV-01); another user's dream or task returns 404 (DR-01); weekly counts use only the newest roadmap; deleting a dream removes its tasks (DR-02) | 18 pass |
 | Roadmap schema | `roadmap_schema.py` | A roadmap with a milestone and a task is accepted; the source "copied" is rejected | Pass |
 | Scope guard (Riya's file) | `test_scope_guard.py` | 14 tests passed: normal and Hindi questions allowed; empty, too-long (1500 limit), injection (also with hidden characters) and spam refused; control characters removed; the prompt tag cannot be closed; off-topic marker found and removed | Pass; 2 findings (xfail) |
 | Chat service (Riya's file) | `test_chat_service.py` | 11 tests passed with a fake AI: normal answer, off-topic marker, bad messages never reach the AI, history and wrapped message sent, history trimmed to start with the user, streaming (normal, off-topic, injection) | Pass |
 | Disclaimers (Riya's file) | `test_disclaimer_service.py` | 15 tests passed: topic detection (salary, guarantee, legal, health, finance), answer text unchanged, no notice for plain advice, one notice per topic, fixed messages | Pass; 5 findings (xfail) |
-| Automated suite | `backend/tests/` | `pytest` in `backend/`: 45 passed, 7 xfailed (known findings, see section 4). The 5 tests beyond the three M4 files come from `test_health.py` and `test_m2_smoke.py` | Pass |
+| Security and auth (Riya's file) | `test_security_and_auth.py` | 36 tests | Pass |
+| Gemini client (Riya's file) | `test_ai_client.py` | 29 tests with a fake Gemini: retries, circuit breaker, safety and empty answers, structured JSON, streaming | Pass |
+| Roadmap generation (Riya's file) | `test_roadmap_generation.py` | 43 tests with a fake AI | Pass |
+| Roadmap regeneration (Riya's file) | `test_roadmap_regeneration.py` | 19 tests with a fake AI | Pass |
+| Roadmap prompts (Riya's file) | `test_roadmap_prompts.py` | 11 tests | Pass |
+| Automated suite | `backend/tests/` | `pytest` in `backend/` on `main` after all test branches were merged: 201 passed, 7 xfailed (known findings, see section 4) | Pass |
 
 ## 4. Defects found
 | ID | Summary | Severity | Status |
@@ -54,31 +53,25 @@ what has not been tested yet.
 | DEF-008 | `disclaimer_service.py` gives a salary notice for "per month" (study hours) | Low | Open |
 | DEF-009 | `disclaimer_service.py` gives a finance notice for "invest time" | Low | Open |
 | DEF-010 | `disclaimer_service.py` adds no notice for lawyer or doctor answers (SRS section 3.6 and NFR-12); to confirm with Riya | Medium | Open |
+| DEF-011 | The file is empty, and the app stops at start without `SECRET_KEY` (at least 32 characters) and `GEMINI_API_KEY`. The setup guide has step 3b, but the template is still missing | Medium | Open (Riya) |
+| DEF-012 | `RoadmapResponse` requires `version` and `disclaimer`, but Ananya's Roadmap table has neither (SRS section 5.1 names them), so roadmap endpoints returning her objects would fail validation | Medium | Open (team decision) |
 
 The full log is in `docs/defect_log.md`.
 
 ## 5. Limitations
-- The checks in section 3 down to the roadmap schema were direct checks run by
-  the code's author with a temporary store. They are not a replacement for
-  independent testing. Under the team rule that nobody tests their own code,
-  the independent tests for these files are owned by Riya (M4).
+- The checks for the shared utilities and schemas (date helpers, constants, errors, task, dream, auth, chat and roadmap schemas, status rules, weekly calculation) were direct checks run by hand by the code's author. `test_routers_db.py` is automated, but it was also written by the author of the routers it tests. Under the team rule that nobody tests their own code, Riya should review both.
 - The M4 tests (scope guard, chat service, disclaimers) were written and run
   by Sonali against Riya's code. They run automatically in pytest.
 - A test marked xfail means "expected to fail": it describes the correct
   behaviour that the code does not have yet. Each one is logged as a defect.
-- Nothing has been tested against a real database, because the M1 models and
-  repositories are not in `main`.
-- The four router connection points (`get_dream_repo`, `get_journal_repo`,
-  `get_task_repo`, `get_analytics_repo`) raise a "connect the repository"
-  error until M1's repositories are added.
+- Router and service tests now run against a real SQLite database (temporary, in memory). They have not been run against PostgreSQL, or through the running server.
+- The logged-in user is a temporary demo user (id 1) in `dream_router.get_current_user_id`, because the login helper (`dependencies.py`) is not in `main` yet. The weekly graph counts only the newest roadmap of a dream, because the Roadmap table has no active flag; the SRS says a dream has one roadmap, but the tables allow several.
 - Under SRS FR-EV-01 a task can become completed only through accepted
   evidence. The evidence service is not built yet, so no task can reach
   "completed" in the running app, and the weekly graph shows zero completed.
-- Deleting a dream does not yet delete its roadmaps, tasks, evidence and
-  analytics (SRS FR-MD-04). This needs a cascading delete in M1.
-- Not yet tested: `security.py`, `ai_client.py`, `intake_service.py`,
-  `roadmap_generator.py` and `roadmap_regenerator.py` (in `main`, not yet read
-  or tested), the readiness score, and the frontend.
+- Deleting a dream also deletes its roadmaps, milestones and tasks (SRS DR-02); this is tested for tasks in `test_routers_db.py`. Evidence, resources and quiz tables do not exist yet.
+- `RoadmapResponse` requires `version` and `disclaimer`, but Ananya's Roadmap table has neither, so roadmap endpoints are not tested here.
+- Tested since this report was first written: `security.py` (36 tests), `ai_client.py` (29), `roadmap_generator.py` (43), `roadmap_regenerator.py` (19) and the roadmap prompts (11). Not tested by me yet: the frontend, the readiness score, and the auth, roadmap and chat services and routers that are not in `main`. Whether `intake_service.py` is covered inside the roadmap generation tests has not been checked.
 - Not yet checked: whether generated roadmaps carry the disclaimer for
   medical, legal and other regulated fields (SRS FR-RG-08).
 - Evidence verification, re-planning, reminders and resources were not part of

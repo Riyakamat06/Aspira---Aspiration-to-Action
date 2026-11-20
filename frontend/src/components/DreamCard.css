@@ -1,0 +1,194 @@
+
+/* DREAM CARD */
+.dream-card {
+  background: linear-gradient(145deg, #ffffff, #f8f3ff);
+  border: 1px solid #e9ddf8;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 6px 20px rgba(65, 39, 100, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-width: 0;
+}
+
+.dream-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(65, 39, 100, 0.14);
+}
+
+/* CARD HEADER */
+.dream-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.dream-icon {
+  font-size: 27px;
+  color: #8254b5;
+}
+
+.dream-category {
+  background: #eee3fb;
+  color: #694294;
+  padding: 7px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* DREAM DETAILS */
+.dream-card h3 {
+  color: #34234d;
+  font-size: 21px;
+  margin: 0 0 10px;
+}
+
+.dream-description {
+  color: #777084;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 45px;
+  margin: 0;
+}
+
+/* LEARNING INFORMATION */
+.dream-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.dream-meta div {
+  background: #f5efff;
+  padding: 12px;
+  border-radius: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dream-meta span {
+  color: #9589a6;
+  font-size: 11px;
+}
+
+.dream-meta strong {
+  color: #624187;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* PROGRESS SECTION */
+.dream-progress-section {
+  margin: 22px 0;
+}
+
+.dream-progress-info {
+  display: flex;
+  justify-content: space-between;
+  color: #514365;
+  font-size: 13px;
+  margin-bottom: 9px;
+}
+
+.dream-progress-info strong {
+  color: #8051b2;
+}
+
+.dream-progress-bar {
+  height: 9px;
+  background: #e9e0f3;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.dream-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9b70d0, #c18be9);
+  border-radius: 20px;
+  transition: width 0.4s ease;
+}
+
+/* TASK SUMMARY */
+.dream-task-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.dream-task-summary span {
+  background: #f1edfa;
+  color: #684b91;
+  padding: 8px 11px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* CARD ACTIONS */
+.dream-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.dream-card-actions button {
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.dream-card-actions button:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+.dream-card-actions button:focus-visible {
+  outline: 3px solid #a47be9;
+  outline-offset: 3px;
+}
+
+.dream-view-btn {
+  background: #7650a5;
+  color: white;
+  flex: 1;
+}
+
+.dream-edit-btn {
+  background: #eee5f8;
+  color: #624187;
+}
+
+.dream-delete-btn {
+  background: #ffebeb;
+  color: #c34c4c;
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 600px) {
+  .dream-card {
+    padding: 18px;
+  }
+
+  .dream-card h3 {
+    font-size: 19px;
+  }
+
+  .dream-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .dream-card-actions button {
+    padding: 10px 12px;
+  }
+}

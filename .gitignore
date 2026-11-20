@@ -1,6 +1,27 @@
+# Aspira - files Git must never upload.
+
+# Python virtual environments (packages installed on one machine)
 .venv/
+venv/
+
+# Python caches and test caches
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Secret settings (real keys). Only the fake-value .env.example may be committed.
 .env
+.env.local
+.env.*.local
+
+# Local database files
 *.db
+*.sqlite3
+
+# Frontend packages and build output (Tanushree's folder)
+node_modules/
+dist/
+build/
+
+# Editor and system files
+.DS_Store

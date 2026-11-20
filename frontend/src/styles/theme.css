@@ -1,0 +1,14 @@
+
+:root {
+  font-family: "Inter", Arial, sans-serif;
+
+  --primary: #6554c0;
+  --primary-dark: #49379c;
+  --background: #f7f6fc;
+  --surface: #ffffff;
+  --text: #25213b;
+  --muted: #77748a;
+  --border: #e8e5f0;
+  --success: #25966b;
+  --danger: #d95365;
+}

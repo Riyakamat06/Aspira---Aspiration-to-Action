@@ -1,0 +1,105 @@
+
+.readiness-card {
+  background: linear-gradient(145deg, #ffffff, #faf5ff);
+  border: 1px solid #e9def5;
+  border-radius: 20px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(65, 39, 100, 0.07);
+}
+
+.readiness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+}
+
+.readiness-header h3 {
+  color: #39264f;
+  font-size: 19px;
+  margin: 0 0 7px;
+}
+
+.readiness-header p {
+  color: #8b7c99;
+  font-size: 12px;
+  margin: 0;
+}
+
+.readiness-icon {
+  font-size: 27px;
+  background: #eee3fb;
+  padding: 11px;
+  border-radius: 13px;
+}
+
+.gauge-container {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0 20px;
+}
+
+.gauge-circle {
+  width: 175px;
+  height: 175px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-inner {
+  width: 140px;
+  height: 140px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-inner h2 {
+  color: #68438f;
+  font-size: 35px;
+  margin: 0;
+}
+
+.gauge-inner span {
+  color: #9484a2;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.readiness-status {
+  display: inline-block;
+  background: #eee3fb;
+  color: #704b98;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.readiness-result p {
+  color: #81758d;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 500px) {
+  .readiness-card {
+    padding: 18px;
+  }
+
+  .gauge-circle {
+    width: 150px;
+    height: 150px;
+  }
+
+  .gauge-inner {
+    width: 120px;
+    height: 120px;
+  }
+}

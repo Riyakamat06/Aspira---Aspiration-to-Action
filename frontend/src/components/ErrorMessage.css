@@ -1,0 +1,63 @@
+
+.error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px;
+  margin: 18px 0;
+  background: #fff3f3;
+  border: 1px solid #f3cccc;
+  border-left: 4px solid #e45b65;
+  border-radius: 12px;
+}
+
+.error-icon {
+  font-size: 23px;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-content h4 {
+  color: #b63845;
+  font-size: 15px;
+  margin: 0 0 7px;
+}
+
+.error-content p {
+  color: #76545a;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.error-retry {
+  padding: 9px 17px;
+  border: none;
+  border-radius: 8px;
+  background: #8055d9;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.error-retry:hover {
+  background: #6840bd;
+  transform: translateY(-1px);
+}
+
+.error-close {
+  border: none;
+  background: transparent;
+  color: #a46a70;
+  font-size: 23px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.error-close:hover {
+  color: #b63845;
+}

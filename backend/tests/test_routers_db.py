@@ -31,6 +31,13 @@ NOTE
     an independent review).
 """
 
+import os
+
+# settings the app needs when config is loaded; evidence is required by default (SRS FR-EV-01)
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-tests-only-0000")
+os.environ.setdefault("GEMINI_API_KEY", "fake-key-not-real")
+os.environ["EVIDENCE_REQUIRED"] = "true"
+
 from datetime import date
 from types import SimpleNamespace
 
@@ -56,6 +63,8 @@ from app.repositories import (
 )
 from app.routers import analytics_router, dream_router, journal_router, task_router
 from app.routers.dream_router import get_current_user_id
+from app.core.exceptions import InvalidInputError
+from app.services import task_service
 
 
 @pytest.fixture
@@ -251,3 +260,32 @@ def test_deleting_a_dream_removes_its_tasks(env):
     dream, task = make_task(env)
     assert env.client.delete(f"/dreams/{dream.id}").status_code == 204
     assert env.client.get(f"/tasks/{task.id}").status_code == 404   # the task went with it (SRS DR-02)
+
+# ---------------------------------------------------------------- evidence switch
+
+def test_with_evidence_required_completed_is_refused_at_service_level(env):
+    _, task = make_task(env)
+    with pytest.raises(InvalidInputError):
+        task_service.change_task_status(env.db, 1, task.id, "completed", evidence_required=True)
+
+
+def test_without_evidence_a_task_can_be_finished_and_reopened(env):
+    _, task = make_task(env)
+    task_service.change_task_status(env.db, 1, task.id, "completed", evidence_required=False)
+    assert env.client.get(f"/tasks/{task.id}").json()["status"] == "completed"
+    task_service.change_task_status(env.db, 1, task.id, "pending", evidence_required=False)
+    assert env.client.get(f"/tasks/{task.id}").json()["status"] == "pending"
+
+
+@pytest.mark.parametrize("start", ["overdue", "submitted"])
+def test_without_evidence_overdue_and_submitted_tasks_can_be_finished(env, start):
+    _, task = make_task(env, status=start)
+    task_service.change_task_status(env.db, 1, task.id, "completed", evidence_required=False)
+    assert env.client.get(f"/tasks/{task.id}").json()["status"] == "completed"
+
+
+def test_without_evidence_another_users_task_is_still_404(env):
+    _, task = make_task(env)
+    with pytest.raises(Exception) as error:
+        task_service.change_task_status(env.db, 2, task.id, "completed", evidence_required=False)
+    assert error.value.status_code == 404

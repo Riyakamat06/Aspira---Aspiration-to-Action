@@ -123,14 +123,12 @@ def test_off_topic_marker_is_detected_and_removed():
     assert split_off_topic("A normal answer") == (False, "A normal answer")
 
 
-@pytest.mark.xfail(reason="Finding: a normal sentence containing 'new instructions:' is blocked as an injection (SRS risk: guard too strict)")
 def test_normal_sentence_with_new_instructions_is_allowed():
     # a real user might write this; the correct behaviour is to allow it
     result = check_user_text("My manager gave me new instructions: should I switch teams?")
     assert result.verdict is Verdict.OK  # today it is INJECTION, so this test is XFAIL
 
 
-@pytest.mark.xfail(reason="To confirm: the pattern 'you are now <word>' may block a harmless sentence")
 def test_normal_sentence_with_you_are_now_is_allowed():
     # a harmless sentence that contains the words "you are now"
     result = check_user_text("I wonder if you are now able to help me choose a career")

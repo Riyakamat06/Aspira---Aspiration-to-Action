@@ -16,7 +16,7 @@ from app.prompts.roadmap_prompts import REGEN_SYSTEM, build_regen_prompt
 from app.services.ai_client import GeminiClient
 from app.services.intake_service import IntakeAnswers
 from app.services.roadmap_generator import (
-    PhaseDraft, RoadmapDraft, TaskDraft, produce_draft, prompt_from_answers)
+    PhaseDraft, RoadmapDraft, produce_draft, prompt_from_answers)
 from app.services.scope_guard import Verdict, check_user_text, neutralise_for_prompt
 
 
@@ -44,9 +44,8 @@ async def regenerate_roadmap(answers: IntakeAnswers, previous: RoadmapDraft, *, 
     clean_fb = fb.text if fb else ""
 
     completed = [t for t in previous.tasks if t.completed] if keep_completed else []
-    done_hours = sum(t.estimated_hours for t in completed)
     remaining_weeks = max(1, answers.total_weeks - max(0, weeks_elapsed))
-    remaining_hours = max(float(answers.hours_per_week), answers.hours_per_week * remaining_weeks - 0.0)
+    remaining_hours = max(float(answers.hours_per_week), float(answers.hours_per_week * remaining_weeks))
 
     prompt = build_regen_prompt(
         base=prompt_from_answers(answers),
@@ -69,10 +68,14 @@ async def regenerate_roadmap(answers: IntakeAnswers, previous: RoadmapDraft, *, 
         carried = [t.model_copy(update={"completed": True}) for t in completed]
         phases.append(PhaseDraft(position=0, name="Completed so far", goal="Progress you have already made.",
                                  tasks=carried))
-    offset = max((t.week for t in completed), default=0) if completed else 0
+    # Fresh tasks come after the weeks already spent: the AI plans weeks 1..N for the
+    # time that is left, so move them later by the weeks elapsed (never past the total).
+    # The caller anchors due dates at (today - weeks_elapsed) so dates stay correct.
+    offset = max(0, weeks_elapsed) if completed else 0
     for ph in fresh.phases:
-        phases.append(ph.model_copy(update={"tasks": [t.model_copy(update={"week": t.week + offset})
-                                                    for t in ph.tasks]}))
+        for t in ph.tasks:
+            t.week = min(answers.total_weeks, t.week + offset)
+        phases.append(ph)
     for pi, p in enumerate(phases, 1):
         p.position = pi
     n = 0

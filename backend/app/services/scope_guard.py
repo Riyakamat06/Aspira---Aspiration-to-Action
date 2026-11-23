@@ -42,11 +42,13 @@ _INJECTION = [re.compile(p, re.I) for p in (
     r"ignore\s+(all\s+|any\s+|the\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?)",
     r"disregard\s+(all\s+|your\s+)?(previous|prior|above|system)\s+(instructions?|prompts?|rules?)",
     r"(reveal|show|print|repeat|leak)\s+(me\s+)?(your|the)\s+(system|hidden|initial)\s+(prompt|instructions?)",
-    r"you\s+are\s+now\s+(?!a\s+career)\w+",
+    # role-reset attempts only; ordinary "you are now ready/eligible/..." must pass
+    r"\byou\s+are\s+now\s+(?:in\s+\w+\s+mode|dan\b|(?:an?\s+)?(?:unrestricted|uncensored|unfiltered|jailbroken|evil|different|new)\b|no\s+longer\b|free\s+(?:of|from)\b|my\s+\w+\b)",
     r"\b(jailbreak|dan\s+mode|developer\s+mode)\b",
     r"act\s+as\s+(if\s+you\s+(have|had)\s+no|an?\s+unrestricted)",
     r"</?\s*(system|assistant|instructions?)\s*>",
-    r"\bnew\s+instructions?\s*:",
+    # "new instructions:" only when followed by an override verb, not in normal prose
+    r"\bnew\s+instructions?\s*:\s*(?:you\b|ignore\b|disregard\b|forget\b|from\s+now\b|act\b|always\b|never\b)",
 )]
 
 _ROLE_TAG = re.compile(r"</?\s*(user_input|system|assistant|context)\s*>", re.I)

@@ -20,15 +20,15 @@ REFUSAL_MESSAGE = (
 )
 
 _RULES: list[tuple[str, re.Pattern[str], str]] = [
-    ("salary", re.compile(r"\b(salary|salaries|ctc|lpa|package|compensation|per\s+(year|annum|month))\b|[₹$€£]\s?\d", re.I),
+    ("salary", re.compile(r"\b(salary|salaries|ctc|lpa|stipend|(?:salary|pay|compensation|ctc|pay)\s+package|package\s+of\s+[\u20b9$\u20ac\u00a3\d]|pay\s+(?:scale|range|band)|(?:per|a)\s+(?:year|annum)\s+(?:salary|pay|ctc))\b|[\u20b9$\u20ac\u00a3]\s?\d|\b\d[\d,.]*\s*(?:lpa|lakhs?|k\s*(?:per|/)\s*(?:month|year)|per\s+(?:annum|month))\b", re.I),
      "Salary figures vary widely by company, city and time; treat them as rough indications."),
     ("guarantee", re.compile(r"\b(guarantee[sd]?|definitely\s+get|will\s+(surely|certainly)\s+(get|land)|100%\s+(placement|selection))\b", re.I),
      "No outcome such as a job offer can be guaranteed; results depend on your effort and the market."),
-    ("legal", re.compile(r"\b(visa|immigration|work\s+permit|contract\s+clause|non-?compete|lawsuit)\b", re.I),
+    ("legal", re.compile(r"\b(visa|immigration|work\s+permit|contract\s+clause|non-?compete|lawsuit|lawyers?|attorneys?|legal\s+(?:advice|action|counsel)|sue\b|sued\b)", re.I),
      "For visas, contracts or legal matters, consult a qualified professional or official source."),
-    ("health", re.compile(r"\b(burnout|anxiety|depress(ed|ion)|medication|therapy|panic)\b", re.I),
+    ("health", re.compile(r"\b(burnout|anxiety|depress(ed|ion)|medication|therapy|panic|doctors?|physicians?|psychiatrists?|psychologists?|medical\s+(?:advice|condition|attention)|diagnos(?:is|ed|e))\b", re.I),
      "For health or wellbeing concerns, please talk to a qualified professional or someone you trust."),
-    ("finance", re.compile(r"\b(invest(ing|ment)?|stocks?|crypto|loan|mutual\s+funds?)\b", re.I),
+    ("finance", re.compile(r"\b(stocks?|stock\s+market|share\s+market|crypto(?:currency)?|loans?|mutual\s+funds?|invest(?:ing)?\s+in\s+(?:stocks?|crypto\w*|mutual|shares?|gold|funds?|real\s+estate|property)|investment\s+(?:advice|portfolio|plan|returns?))\b", re.I),
      "This is not financial advice; consult a certified financial adviser."),
 ]
 
@@ -41,6 +41,11 @@ def apply_disclaimers(answer: str) -> tuple[str, list[str]]:
     """Return (answer, notices). Notices are returned separately so the UI can style them."""
     notices = [note for _, pat, note in _RULES if pat.search(answer or "")]
     return answer, notices
+
+
+def needs_regulated_disclaimer(career: str) -> bool:
+    """True for medical / legal / health-related careers (shows the 'educational guidance' banner)."""
+    return bool({"health", "legal"} & set(detect_topics(career)))
 
 
 def roadmap_notice() -> str:

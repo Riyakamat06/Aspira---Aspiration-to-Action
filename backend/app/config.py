@@ -43,7 +43,7 @@ class Settings(BaseSettings):
 
     # ── Gemini ─────────────────────────────────────────────────────────────
     gemini_api_key: SecretStr = Field(min_length=10)
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: float = Field(default=45.0, gt=0)
     gemini_max_retries: int = Field(default=3, ge=0, le=6)
     gemini_max_concurrency: int = Field(default=8, ge=1, le=64)
@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     roadmap_rate_limit_per_hour: int = Field(default=10, ge=1)
     roadmap_dedupe_ttl_seconds: int = Field(default=300, ge=0)
     max_dreams_per_user: int = Field(default=5, ge=1)
+    evidence_required: bool = True  # SRS FR-EV-01: tasks complete only via accepted evidence; the demo .env sets EVIDENCE_REQUIRED=false
 
     @field_validator("cors_origins", mode="before")
     @classmethod

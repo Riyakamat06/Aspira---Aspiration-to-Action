@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from datetime import date, timedelta
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -24,6 +25,7 @@ from app.services.ai_client import AIResponseError, GeminiClient, get_ai_client
 from app.services.disclaimer_service import roadmap_notice
 from app.services.intake_service import IntakeAnswers
 from app.services.scope_guard import neutralise_for_prompt
+from app.utils.constants import TASK_TYPES
 
 log = logging.getLogger("aspira.roadmap")
 
@@ -37,6 +39,7 @@ class _AITask(BaseModel):
     estimated_hours: float
     week: int
     skill_tags: list[str]
+    task_type: str = "learning"  # optional so older fakes/replies without it still validate
 
 
 class _AIPhase(BaseModel):
@@ -59,6 +62,7 @@ class TaskDraft(BaseModel):
     estimated_hours: float = Field(ge=0.5, le=60)
     week: int = Field(ge=1)
     skill_tags: list[str] = []
+    task_type: str = "learning"
     completed: bool = False
 
 
@@ -83,7 +87,21 @@ class RoadmapDraft(BaseModel):
         return [t for p in self.phases for t in p.tasks]
 
 
+def due_date_for_week(start: date, week: int) -> date:
+    """Calendar due date for a task: the last day of its 1-based roadmap week.
+
+    Lets the persistence layer always fill a required ``due_date`` column.
+    """
+    return start + timedelta(weeks=max(1, week)) - timedelta(days=1)
+
+
 # ── Normalisation / validation ─────────────────────────────────────────────
+def _clean_type(value: str) -> str:
+    """Map the model's task_type onto the project's allowed set (default: learning)."""
+    value = (value or "").strip().lower()
+    return value if value in TASK_TYPES else "learning"
+
+
 def _clip(s: str, n: int) -> str:
     s = " ".join((s or "").split())
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
@@ -109,7 +127,8 @@ def normalise(ai: _AIRoadmap, *, total_weeks: int, hours_budget: float) -> tuple
             tasks.append(TaskDraft(
                 position=0, title=_clip(t.title, 120), description=_clip(t.description, 500) or _clip(t.title, 120),
                 estimated_hours=min(60.0, max(0.5, round(float(t.estimated_hours or 1), 1))), week=week,
-                skill_tags=[_clip(x, 24) for x in t.skill_tags if x.strip()][:4]))
+                skill_tags=[_clip(x, 24) for x in t.skill_tags if x.strip()][:4],
+                task_type=_clean_type(t.task_type)))
         if tasks:
             phases.append(PhaseDraft(position=0, name=_clip(ph.name, 80), goal=_clip(ph.goal, 300), tasks=tasks))
 

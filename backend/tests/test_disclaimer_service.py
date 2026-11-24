@@ -102,25 +102,21 @@ def test_refusal_message_points_back_to_careers():
     assert "career" in message         # and it steers the user back to careers
 
 
-@pytest.mark.xfail(reason="Finding: the word 'package' (a software package) triggers the salary notice")
 def test_software_package_does_not_trigger_salary_notice():
     _, notices = apply_disclaimers("Install the pandas package first.")  # about software, not pay
     assert notices == []                                                 # correct: no notice
 
 
-@pytest.mark.xfail(reason="Finding: 'per month' (for example study hours) triggers the salary notice")
 def test_hours_per_month_does_not_trigger_salary_notice():
     _, notices = apply_disclaimers("Practise 5 hours per month.")  # about study time, not pay
     assert notices == []                                           # correct: no notice
 
 
-@pytest.mark.xfail(reason="Finding: 'invest time' triggers the 'not financial advice' notice")
 def test_invest_time_does_not_trigger_finance_notice():
     _, notices = apply_disclaimers("Invest time in practising DSA daily.")  # about time, not money
     assert notices == []                                                    # correct: no notice
 
 
-@pytest.mark.xfail(reason="To confirm: SRS section 3.6 and NFR-12 ask for the disclaimer on medical and legal chat answers, but answers get none")
 @pytest.mark.parametrize("answer", [
     "To become a lawyer, complete an LLB and enrol with the Bar Council.",  # a legal career
     "To become a doctor, clear NEET and complete MBBS.",                    # a medical career

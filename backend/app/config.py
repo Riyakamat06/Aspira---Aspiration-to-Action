@@ -43,7 +43,9 @@ class Settings(BaseSettings):
 
     # ── Gemini ─────────────────────────────────────────────────────────────
     gemini_api_key: SecretStr = Field(min_length=10)
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
+    # Comma-separated backup models, tried in order when the main one is overloaded (503/429) or missing (404).
+    gemini_fallback_models: str = ""
     gemini_timeout_seconds: float = Field(default=45.0, gt=0)
     gemini_max_retries: int = Field(default=3, ge=0, le=6)
     gemini_max_concurrency: int = Field(default=8, ge=1, le=64)
@@ -79,6 +81,11 @@ class Settings(BaseSettings):
             if "*" in self.cors_origins:
                 raise ValueError("wildcard CORS is not allowed in production")
         return self
+
+    @property
+    def gemini_fallback_list(self) -> list[str]:
+        """The backup models from GEMINI_FALLBACK_MODELS (blanks ignored)."""
+        return [m.strip() for m in self.gemini_fallback_models.split(",") if m.strip()]
 
     @property
     def is_production(self) -> bool:

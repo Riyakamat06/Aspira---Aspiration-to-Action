@@ -333,3 +333,80 @@ def test_no_snapshot_is_saved_when_record_snapshot_is_false(monkeypatch):
                        tasks_by_roadmap={2: [task("completed", -1), task("pending", 5)]})
     get_readiness(None, 1, 5, today=TODAY, record_snapshot=False)
     assert saved == []                                       #
+
+def test_a_roadmap_without_tasks_gives_a_not_started_report_and_saves_no_snapshot(monkeypatch):
+    saved = fake_repos(monkeypatch, roadmaps=[SimpleNamespace(id=1)], tasks_by_roadmap={1: []})
+    report = get_readiness(None, 1, 5, today=TODAY)
+    assert report.roadmap_id == 1                            # the roadmap exists
+    assert report.level == "Not started" and report.score == 0
+    assert saved == []                                       # nothing to record
+
+
+def test_saved_snapshots_feed_the_momentum_part(monkeypatch):
+    fake_repos(monkeypatch, roadmaps=[SimpleNamespace(id=1)],
+               tasks_by_roadmap={1: [task("pending", 5)]},
+               snapshots=[SimpleNamespace(week_start=LAST_WEEK, tasks_completed=1),
+                          SimpleNamespace(week_start=THIS_WEEK, tasks_completed=2)])
+    report = get_readiness(None, 1, 5, today=TODAY)
+    assert component(report, "momentum").value == pytest.approx(0.5, abs=0.001)  # progress in 2 of 4 weeks
+
+
+def test_only_journal_entries_of_this_dream_in_the_last_30_days_are_counted(monkeypatch):
+    entries = [
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 11, 17, 10, 0)),  # 1 day ago: counts
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 10, 19, 9, 0)),   # exactly 30 days ago: counts
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 10, 18, 9, 0)),   # 31 days ago: too old
+        SimpleNamespace(dream_id=6, created_at=datetime(2026, 11, 17, 10, 0)),  # another dream: not counted
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 11, 19, 9, 0)),   # tomorrow: not counted
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 11, 18, 8, 0)),   # today: counts
+    ]
+    fake_repos(monkeypatch, roadmaps=[SimpleNamespace(id=1)],
+               tasks_by_roadmap={1: [task("pending", 5)]}, entries=entries)
+    report = get_readiness(None, 1, 5, today=TODAY)
+    part = component(report, "reflection")
+    assert part.detail == "3 journal entries in the last 30 days"        # three of the six count
+    assert part.value == pytest.approx(0.75, abs=0.001)                  # 3 of 4
+
+
+def test_today_defaults_to_the_real_date(monkeypatch):
+    fake_repos(monkeypatch, roadmaps=[])                     # nothing to load
+    assert get_readiness(None, 1, 5).as_of == date.today()   # no `today` given: the real date is used
+
+
+def test_a_roadmap_without_tasks_gives_a_not_started_report_and_saves_no_snapshot(monkeypatch):
+    saved = fake_repos(monkeypatch, roadmaps=[SimpleNamespace(id=1)], tasks_by_roadmap={1: []})
+    report = get_readiness(None, 1, 5, today=TODAY)
+    assert report.roadmap_id == 1                            # the roadmap exists
+    assert report.level == "Not started" and report.score == 0
+    assert saved == []                                       # nothing to record
+
+
+def test_saved_snapshots_feed_the_momentum_part(monkeypatch):
+    fake_repos(monkeypatch, roadmaps=[SimpleNamespace(id=1)],
+               tasks_by_roadmap={1: [task("pending", 5)]},
+               snapshots=[SimpleNamespace(week_start=LAST_WEEK, tasks_completed=1),
+                          SimpleNamespace(week_start=THIS_WEEK, tasks_completed=2)])
+    report = get_readiness(None, 1, 5, today=TODAY)
+    assert component(report, "momentum").value == pytest.approx(0.5, abs=0.001)  # progress in 2 of 4 weeks
+
+
+def test_only_journal_entries_of_this_dream_in_the_last_30_days_are_counted(monkeypatch):
+    entries = [
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 11, 17, 10, 0)),  # 1 day ago: counts
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 10, 19, 9, 0)),   # exactly 30 days ago: counts
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 10, 18, 9, 0)),   # 31 days ago: too old
+        SimpleNamespace(dream_id=6, created_at=datetime(2026, 11, 17, 10, 0)),  # another dream: not counted
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 11, 19, 9, 0)),   # tomorrow: not counted
+        SimpleNamespace(dream_id=5, created_at=datetime(2026, 11, 18, 8, 0)),   # today: counts
+    ]
+    fake_repos(monkeypatch, roadmaps=[SimpleNamespace(id=1)],
+               tasks_by_roadmap={1: [task("pending", 5)]}, entries=entries)
+    report = get_readiness(None, 1, 5, today=TODAY)
+    part = component(report, "reflection")
+    assert part.detail == "3 journal entries in the last 30 days"        # three of the six count
+    assert part.value == pytest.approx(0.75, abs=0.001)                  # 3 of 4
+
+
+def test_today_defaults_to_the_real_date(monkeypatch):
+    fake_repos(monkeypatch, roadmaps=[])                     # nothing to load
+    assert get_readiness(None, 1, 5).as_of == date.today()   # no `today` given: the real date is used

@@ -39,8 +39,10 @@ checked, what was found, and what has not been tested yet.
 | Roadmap generation and intake (Riya's files) | `test_roadmap_generation.py` | 43 tests with a fake AI: intake answers (17), cleaning of the AI plan (14), repair round (3), prompt (2), cache and single flight (7) | Pass |
 | Roadmap regeneration (Riya's file) | `test_roadmap_regeneration.py` | 19 tests with a fake AI: feedback guard, finished tasks kept, week shift, added and removed titles | Pass |
 | Roadmap prompts (Riya's file) | `test_roadmap_prompts.py` | 11 tests | Pass |
+| Readiness score (Riya's file) | `test_readiness_score.py` | 45 independent tests of `readiness_service.py` (see the file's docstring for the cases) | Pass |
+| Riya's own tests (model fallback) | `test_model_fallback.py` | 3 tests written by the author of the code (not reviewed by me) | Pass |
 | Riya's own tests | `test_m2_api.py` (22), `test_readiness.py` (7), `test_defect_fixes.py` (21) | Written by the author of the code, so they are not independent. Not reviewed by Sonali | Pass |
-| Automated suite | `backend/tests/` | `pytest` in `backend/` on `main`: 263 passed, no failures, no xfail (14 test files; 208 tests are Sonali's, 50 are Riya's own, 5 are the health and smoke tests) | Pass |
+| Automated suite | `backend/tests/` | `pytest` in `backend/` on `main`: 311 passed, no failures, no xfail (14 test files; 208 tests are Sonali's, 50 are Riya's own, 5 are the health and smoke tests) | Pass |
 
 ## 4. Defects found
 | ID | Summary | Severity | Status |
@@ -55,9 +57,10 @@ checked, what was found, and what has not been tested yet.
 | DEF-008 | `disclaimer_service.py` gave a salary notice for "per month" (study hours) | Low | Fixed by Riya, re-tested by Sonali |
 | DEF-009 | `disclaimer_service.py` gave a finance notice for "invest time" | Low | Fixed by Riya, re-tested by Sonali |
 | DEF-010 | `disclaimer_service.py` added no notice for lawyer or doctor answers (SRS section 3.6 and NFR-12) | Medium | Fixed by Riya, re-tested by Sonali |
-| DEF-011 | `backend/.env.example` was empty, so a new teammate had no template for the required settings | Medium | Fixed by Riya, re-tested by Sonali |
+| DEF-011 | `backend/.env.example` was empty, so a new teammate had no template for the required settings | Medium | Fixed by Riya (the file now has the required setting names) |
 | DEF-012 | `RoadmapResponse` requires `version` and `disclaimer`, but Ananya's Roadmap table has neither (SRS section 5.1 names them), so roadmap endpoints returning her objects would fail validation | Medium | Open (team decision) |
-| DEF-013 | POST /dreams returned 500 (NoReferencedTableError) when the server loaded only the routers, because the model files were not imported | Medium | Fixed (`main.py` calls `init_db` at start-up), re-tested by Sonali |
+| DEF-013 | POST /dreams returned 500 (NoReferencedTableError) when the server loaded only the routers, because the model files were not imported | Medium | Fixed by Riya (`main.py` calls `init_db` at start-up, which imports every model); live re-test pending |
+| DEF-014 | Several tests read the developer's own `backend/.env` (backup models, `EVIDENCE_REQUIRED`), so results could differ between machines | Medium | Fixed (tests set their own settings, commit 7c4e493) |
 
 The full log is in `docs/defect_log.md`.
 
@@ -70,7 +73,7 @@ The full log is in `docs/defect_log.md`.
 - Under SRS FR-EV-01 a task can become completed only through accepted evidence. The default setting `EVIDENCE_REQUIRED=true` keeps that rule. The evidence service is not built yet, so with the default no task can reach "completed" and the weekly graph shows zero completed. For the two-week demo, `EVIDENCE_REQUIRED=false` lets a user mark tasks finished and reopen them without evidence. This is a deliberate deviation from FR-EV-01, for the demo only. Riya proposed the switch, and it is tested in `test_routers_db.py` (5 tests).
 - Deleting a dream also deletes its roadmaps, milestones and tasks (SRS DR-02); this is tested for tasks in `test_routers_db.py`. Evidence, resources and quiz tables do not exist yet.
 - `RoadmapResponse` requires `version` and `disclaimer`, but Ananya's Roadmap table has neither (DEF-012). Riya's roadmap router and `roadmap_service.py` are in `main` now, and I have not tested them.
-- Not tested independently: `auth_service.py`, `roadmap_service.py`, `readiness_service.py`, `chat_flow_service.py`, and the auth, roadmap and chat routers (all in `main`; Riya wrote her own tests for them), and the frontend (I have not seen it in `main`).
+- Not tested independently: `auth_service.py`, `roadmap_service.py`, `chat_flow_service.py`, and the auth, roadmap and chat routers (all in `main`; Riya wrote her own tests for them), and the frontend (I have not seen it in `main`).
 - Every generated roadmap carries a general AI notice (tested). Whether roadmaps in medical, legal and other regulated fields get the specific notice of SRS FR-RG-08 has not been checked.
 - Evidence verification, re-planning, reminders and resources were not part of this work. The file structure assigns them to Riya or marks them "Later".
 

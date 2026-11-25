@@ -19,9 +19,10 @@ WHO USES IT
 NOTE
     Field names must match Ananya's User model (user.py).
     The password must never appear in a response schema.
+    UserResponse.name is read from the database column full_name (Ananya's User model).
 """
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator  # AliasChoices: accept two names for one field
 
 
 class RegisterRequest(BaseModel):
@@ -53,6 +54,6 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)   # read data from a database object
 
     id: int          # unique number of the user
-    name: str        # display name
+    name: str = Field(validation_alias=AliasChoices("name", "full_name"))   # display name; the database column is called full_name
     email: str       # login address
     # there is deliberately NO password field here

@@ -10,7 +10,7 @@ class FakeAI:
     def __init__(self): self.calls=0
     async def generate_structured(self, prompt, *, system, schema, temperature=0.7, **kw):
         self.calls+=1
-        tasks=lambda n,w0:[rg._AITask(title=f"Task {w0}-{i}",description="d",estimated_hours=30,week=w0+i,skill_tags=["a"]) for i in range(n)]
+        tasks=lambda n,w0:[rg._AITask(title=f"Task {w0}-{i}",description="d",estimated_hours=30,week=w0+i,skill_tags=["a"],task_type="learning") for i in range(n)]
         return schema(title="Plan",summary="s",phases=[rg._AIPhase(name="P1",goal="g",tasks=tasks(4,1)),rg._AIPhase(name="P2",goal="g",tasks=tasks(4,9))])
     async def generate_text(self,*a,**k): return "[[OFF_TOPIC]] Let's talk careers."
     async def stream_text(self,*a,**k):
@@ -34,7 +34,7 @@ def test_guard_and_intake():
     with pytest.raises(intake.IntakeError): intake.validate_answers({**ANS,"target_career":"12"})
 
 def test_roadmap_and_regen():
-    ai=FakeAI(); a=intake.validate_answers(ANS)
+    rg._cache.clear(); ai=FakeAI(); a=intake.validate_answers(ANS)
     d=asyncio.run(rg.generate_roadmap(a,ai=ai))
     assert len(d.tasks)==8 and d.total_hours<=a.total_hours and [t.position for t in d.tasks]==list(range(1,9))
     assert all(1<=t.week<=a.total_weeks for t in d.tasks) and d.warnings

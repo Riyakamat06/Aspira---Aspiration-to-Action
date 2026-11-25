@@ -98,8 +98,8 @@ class GeminiClient:
     async def generate_text(self, prompt: str | Sequence[types.Content], *, system: str,
                             temperature: float = 0.6, max_tokens: int | None = None) -> str:
         cfg = self._config(system, temperature, max_tokens or settings.gemini_chat_max_output_tokens)
-        resp = await self._call(lambda: self._client.aio.models.generate_content(
-            model=self.model, contents=prompt, config=cfg))
+        resp = await self._call(lambda m: self._client.aio.models.generate_content(
+            model=m, contents=prompt, config=cfg))
         return self._extract_text(resp)
 
     async def generate_structured(self, prompt: str | Sequence[types.Content], *, system: str,
@@ -111,8 +111,8 @@ class GeminiClient:
         contents: str | Sequence[types.Content] = prompt
         last_err: Exception | None = None
         for attempt in range(repair_attempts + 1):
-            resp = await self._call(lambda c=contents: self._client.aio.models.generate_content(
-                model=self.model, contents=c, config=cfg))
+            resp = await self._call(lambda m, c=contents: self._client.aio.models.generate_content(
+                model=m, contents=c, config=cfg))
             parsed = getattr(resp, "parsed", None)
             try:
                 if isinstance(parsed, schema):
@@ -133,28 +133,37 @@ class GeminiClient:
         if not self._breaker.allow():
             raise AIUnavailableError("AI service is cooling down; try again shortly.")
         emitted = False
-        for attempt in range(settings.gemini_max_retries + 1):
-            try:
-                async with self._sem:
-                    stream = await asyncio.wait_for(
-                        self._client.aio.models.generate_content_stream(
-                            model=self.model, contents=prompt, config=cfg),
-                        timeout=settings.gemini_timeout_seconds)
-                    async for chunk in stream:
-                        if chunk.candidates and chunk.candidates[0].finish_reason == "SAFETY":
-                            raise AIBlockedError("Response blocked by safety filters.")
-                        if chunk.text:
-                            emitted = True
-                            yield chunk.text
-                self._breaker.success()
-                return
-            except AIBlockedError:
-                raise
-            except (genai_errors.APIError, asyncio.TimeoutError) as exc:
-                if emitted or not self._is_retryable(exc) or attempt >= settings.gemini_max_retries:
-                    self._breaker.failure()
-                    raise AIUnavailableError(f"AI provider error: {exc}") from exc
-                await self._sleep_backoff(attempt)
+        chain = self._model_chain()
+        last: Exception | None = None
+        for mi, model in enumerate(chain):
+            retries = self._retries_for(mi, len(chain))
+            for attempt in range(retries + 1):
+                try:
+                    async with self._sem:
+                        stream = await asyncio.wait_for(
+                            self._client.aio.models.generate_content_stream(
+                                model=model, contents=prompt, config=cfg),
+                            timeout=settings.gemini_timeout_seconds)
+                        async for chunk in stream:
+                            if chunk.candidates and chunk.candidates[0].finish_reason == "SAFETY":
+                                raise AIBlockedError("Response blocked by safety filters.")
+                            if chunk.text:
+                                emitted = True
+                                yield chunk.text
+                    self._breaker.success()
+                    return
+                except AIBlockedError:
+                    raise
+                except (genai_errors.APIError, asyncio.TimeoutError) as exc:
+                    last = exc
+                    if emitted or not self._is_retryable(exc) or attempt >= retries:
+                        break
+                    await self._sleep_backoff(attempt)
+            if emitted or not self._can_switch(last) or mi == len(chain) - 1:
+                break
+            log.warning("Gemini model %s failed; switching to %s", model, chain[mi + 1])
+        self._breaker.failure()
+        raise AIUnavailableError(f"AI provider error: {last}") from last
 
     # ── internals ──────────────────────────────────────────────────────────
     def _config(self, system: str, temperature: float, max_tokens: int) -> types.GenerateContentConfig:
@@ -162,22 +171,50 @@ class GeminiClient:
             system_instruction=system, temperature=temperature,
             max_output_tokens=max_tokens, safety_settings=_SAFETY)
 
+    def _model_chain(self) -> list[str]:
+        """The model this client was made with, then the configured backups."""
+        chain = [self.model]
+        for m in settings.gemini_fallback_list:
+            if m not in chain:
+                chain.append(m)
+        return chain
+
+    @staticmethod
+    def _retries_for(index: int, total: int) -> int:
+        """With backups available, give up on a busy model sooner so the next one is tried quickly."""
+        if index < total - 1:
+            return min(1, settings.gemini_max_retries)
+        return settings.gemini_max_retries
+
+    @staticmethod
+    def _can_switch(exc: Exception | None) -> bool:
+        """Overloaded, rate-limited, timed out or unknown model: another model may still answer."""
+        if exc is None:
+            return False
+        return GeminiClient._is_retryable(exc) or getattr(exc, "code", None) == 404
+
     async def _call(self, factory):
         if not self._breaker.allow():
             raise AIUnavailableError("AI service is cooling down; try again shortly.")
         last: Exception | None = None
-        for attempt in range(settings.gemini_max_retries + 1):
-            try:
-                async with self._sem:
-                    resp = await asyncio.wait_for(factory(), timeout=settings.gemini_timeout_seconds)
-                self._breaker.success()
-                return resp
-            except (genai_errors.APIError, asyncio.TimeoutError) as exc:
-                last = exc
-                if not self._is_retryable(exc) or attempt >= settings.gemini_max_retries:
-                    break
-                log.warning("Gemini retry %s after %s", attempt + 1, type(exc).__name__)
-                await self._sleep_backoff(attempt)
+        chain = self._model_chain()
+        for mi, model in enumerate(chain):
+            retries = self._retries_for(mi, len(chain))
+            for attempt in range(retries + 1):
+                try:
+                    async with self._sem:
+                        resp = await asyncio.wait_for(factory(model), timeout=settings.gemini_timeout_seconds)
+                    self._breaker.success()
+                    return resp
+                except (genai_errors.APIError, asyncio.TimeoutError) as exc:
+                    last = exc
+                    if not self._is_retryable(exc) or attempt >= retries:
+                        break
+                    log.warning("Gemini retry %s after %s", attempt + 1, type(exc).__name__)
+                    await self._sleep_backoff(attempt)
+            if not self._can_switch(last) or mi == len(chain) - 1:
+                break
+            log.warning("Gemini model %s failed; switching to %s", model, chain[mi + 1])
         self._breaker.failure()
         raise AIUnavailableError(f"AI provider error: {last}") from last
 

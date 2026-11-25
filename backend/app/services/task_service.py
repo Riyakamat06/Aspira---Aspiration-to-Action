@@ -4,15 +4,14 @@ task_service.py - business rules for tasks.
 PURPOSE
     Holds the rules about how a task's status may change, and the two
     functions the task router uses to find a task and change its status.
-    The storage helper (`repo`) is passed in as a parameter, so the real
-    database (Ananya's repository) can replace the test stand-in without
-    changing this file.
+    Tasks are always looked up through the owner (get_task_for_user), so
+    a user cannot read or change another user's task by guessing an id.
 
 FUNCTIONS
-    can_change_status(current, new)     -> True if the move is allowed
-    check_status_change(current, new)   -> raises an error if not allowed
-    get_task(repo, task_id)             -> returns the task, or raises NotFoundError
-    change_task_status(repo, id, new)   -> checks the rules, saves, returns the task
+    can_change_status(current, new)           -> True if the move is allowed
+    check_status_change(current, new)         -> raises an error if not allowed
+    get_task(db, user_id, task_id)            -> the user's task, or NotFoundError
+    change_task_status(db, user_id, id, new)  -> checks the rules, saves, returns the task
 
 STATUS RULES (statuses come from constants.py)
     pending   -> submitted (proof given) or overdue (due date passed)
@@ -25,12 +24,16 @@ WHY THE RULES EXIST
     evidence is accepted, never because the user says so. For that
     reason change_task_status() refuses to set "completed" at all. The
     evidence service will do that step once evidence is accepted.
+    The switch settings.evidence_required (default True) turns this rule off for the
+    two-week demo: then pending, overdue or submitted tasks may be completed, and
+    completed tasks may be reopened (back to pending).
 
 WHO USES IT
     - task_router.py -> calls get_task and change_task_status
 """
 
 from app.core.exceptions import InvalidInputError, NotFoundError   # the shared errors
+from app.repositories import task_repository                        # Ananya's database functions
 from app.utils.constants import (                                   # the shared status words
     TASK_PENDING,
     TASK_SUBMITTED,
@@ -56,23 +59,45 @@ def can_change_status(current: str, new: str) -> bool:
 def check_status_change(current: str, new: str) -> None:
     """Raise InvalidInputError if the status change is not allowed."""
     if not can_change_status(current, new):
-        # f-string: puts the two status names into the message
         raise InvalidInputError(f"A task cannot change from '{current}' to '{new}'")
 
 
-def get_task(repo, task_id: int):
-    """Return one task, or raise NotFoundError if it does not exist."""
-    task = repo.get(task_id)            # ask the repo; it gives None if missing
-    if task is None:
+def get_task(db, user_id: int, task_id: int):
+    """Return one of this user's tasks, or raise NotFoundError."""
+    task = task_repository.get_task_for_user(db, task_id=task_id, user_id=user_id)
+    if task is None:                    # missing, or it belongs to someone else
         raise NotFoundError("Task")     # reply: "Task not found" (status 404)
     return task
 
 
-def change_task_status(repo, task_id: int, new_status: str):
-    """Change a task's status if the rules allow it, and return the task."""
-    task = get_task(repo, task_id)      # 404 if the task does not exist
-    # SRS FR-EV-01: only accepted evidence may complete a task, never a request
-    if new_status == TASK_COMPLETED:
-        raise InvalidInputError("A task becomes completed only when its evidence is accepted")
-    check_status_change(task.status, new_status)    # raises an error if not allowed
-    return repo.update(task_id, status=new_status)  # save the new status
+# Allowed changes when evidence is NOT required (the two-week demo: Finished / Incomplete buttons).
+# Used only when settings.evidence_required is False (Riya's switch in config.py).
+ALLOWED_CHANGES_NO_EVIDENCE = {
+    TASK_PENDING: [TASK_SUBMITTED, TASK_OVERDUE, TASK_COMPLETED],
+    TASK_SUBMITTED: [TASK_PENDING, TASK_COMPLETED],
+    TASK_OVERDUE: [TASK_PENDING, TASK_SUBMITTED, TASK_COMPLETED],
+    TASK_COMPLETED: [TASK_PENDING],
+}
+
+
+def change_task_status(db, user_id: int, task_id: int, new_status: str,
+                       evidence_required: bool | None = None):
+    """Change a task's status if the rules allow it, and return the task.
+
+    evidence_required=None means "read settings.evidence_required" (default True).
+    Tests pass True or False directly.
+    """
+    task = get_task(db, user_id, task_id)            # 404 if not this user's task
+    if evidence_required is None:
+        from app.config import settings              # read lazily, so importing this file needs no settings
+        evidence_required = settings.evidence_required
+    # the model may hold the status as an enum; .value gives the plain word
+    current = getattr(task.status, "value", task.status)
+    if evidence_required:
+        # SRS FR-EV-01: only accepted evidence may complete a task, never a request
+        if new_status == TASK_COMPLETED:
+            raise InvalidInputError("A task becomes completed only when its evidence is accepted")
+        check_status_change(current, new_status)     # raises an error if not allowed
+    elif new_status not in ALLOWED_CHANGES_NO_EVIDENCE.get(current, []):
+        raise InvalidInputError(f"A task cannot change from '{current}' to '{new_status}'")
+    return task_repository.update_task_status(db, task_id=task_id, status=new_status)

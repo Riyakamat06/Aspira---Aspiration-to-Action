@@ -15,7 +15,10 @@ Rules:
 - Each phase has 3-10 concrete, verifiable tasks. A task is a single action a learner can finish and mark done
   (e.g. "Build a REST API with FastAPI and 3 CRUD endpoints"), never vague ("learn Python").
 - Every task has: title (<=100 chars), description (1-3 sentences: what to do and what "done" looks like),
-  estimated_hours (realistic, 1-40), week (1-based week it should be finished by), skill_tags (1-4 short tags).
+  estimated_hours (realistic, 1-40), week (1-based week it should be finished by), skill_tags (1-4 short tags),
+  task_type = exactly one of: "project" (build something and publish it, e.g. on GitHub), "course" (finish a
+  course or earn a certificate), "learning" (study or practise concepts; can be checked with a short quiz),
+  "practical" (a hands-on exercise that can be shown with a screenshot).
 - Weeks must be non-decreasing across the whole roadmap and never exceed total_weeks.
 - Total task hours must fit within the learner's hours_per_week x total_weeks (use 70-95% of it; leave slack).
 - Respect the learner's current level and skip what they already know; match their learning style.

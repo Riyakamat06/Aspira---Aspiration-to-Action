@@ -1,0 +1,137 @@
+
+.aspira-navbar {
+  background: linear-gradient(120deg, #24143f, #49316d, #65458b);
+  padding: 15px 5%;
+  box-shadow: 0 4px 18px rgba(30, 15, 50, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-container {
+  max-width: 1400px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  color: #e5baff;
+  font-size: 30px;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-link {
+  color: #e8def5;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.nav-link.active-link {
+  color: #ffffff;
+  background: rgba(229, 186, 255, 0.2);
+  box-shadow: inset 0 -2px 0 #e5baff;
+}
+
+.logout-btn {
+  background: #e9c4ff;
+  color: #34204d;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+@media (max-width: 1050px) {
+  .navbar-links {
+    gap: 5px;
+  }
+
+  .nav-link {
+    font-size: 12px;
+    padding: 9px;
+  }
+}
+
+@media (max-width: 850px) {
+  .aspira-navbar {
+    padding: 14px 5%;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .navbar-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(140deg, #30204c, #49316d);
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px 25px;
+    gap: 12px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .navbar-links.active {
+    display: flex;
+  }
+
+  .nav-link {
+    text-align: center;
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .logout-btn {
+    width: 100%;
+    margin-top: 5px;
+  }
+}

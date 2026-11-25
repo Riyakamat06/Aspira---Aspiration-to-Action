@@ -24,6 +24,9 @@ NOTES
     - Field names must match Ananya's Roadmap and Milestone models.
       These names were written from the SRS and must be confirmed with
       Riya and Ananya.
+    - title and summary match Ananya's Roadmap model. source, version and
+      disclaimer follow the SRS data model; Ananya's model differs and the
+      team has to decide (open question).
     - Resources per task (FR-RES) are not included yet; they are "Later".
 """
 
@@ -50,6 +53,8 @@ class RoadmapResponse(BaseModel):
 
     id: int                                        # unique number of the roadmap
     dream_id: int                                  # the dream it belongs to
+    title: str                                     # the roadmap's name (a column in Ananya's Roadmap model)
+    summary: str | None = None                     # a short description of the roadmap (optional)
     source: Literal["generated", "user_created"]   # who made it (SRS FR-VAL-04)
     version: int                                   # goes up each time it is regenerated
     disclaimer: bool                               # True for medical or legal careers

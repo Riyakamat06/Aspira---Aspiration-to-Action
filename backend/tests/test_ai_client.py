@@ -24,6 +24,10 @@ WHAT IS TESTED
        an open breaker stops the call before Gemini is asked.
     8. get_ai_client returns the same client every time.
 
+SETTINGS
+    A fixture switches off the backup Gemini models (GEMINI_FALLBACK_MODELS), so
+    the call counts below are the same on every machine, whatever is in .env.
+
 NOTE ON PRIVATE NAMES
     Some tests touch names that start with an underscore (_client, _breaker,
     _CircuitBreaker). That is on purpose: the fake Gemini must be placed
@@ -73,6 +77,13 @@ def no_waiting(monkeypatch):
     async def instant(attempt):
         return None
     monkeypatch.setattr(GeminiClient, "_sleep_backoff", staticmethod(instant))
+
+
+@pytest.fixture(autouse=True)
+def no_backup_models(monkeypatch):
+    # a developer's .env may list backup Gemini models (GEMINI_FALLBACK_MODELS);
+    # the call counts in these tests assume there are none, so switch them off here
+    monkeypatch.setattr(settings, "gemini_fallback_models", "")
 
 
 class FakeAPIError(genai_errors.APIError):

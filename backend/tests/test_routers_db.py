@@ -65,6 +65,7 @@ from app.routers import analytics_router, dream_router, journal_router, task_rou
 from app.routers.dream_router import get_current_user_id
 from app.core.exceptions import InvalidInputError
 from app.services import task_service
+from app.config import settings  # the real settings object (switched in the fixture at the end of this file)
 
 
 @pytest.fixture
@@ -289,3 +290,11 @@ def test_without_evidence_another_users_task_is_still_404(env):
     with pytest.raises(Exception) as error:
         task_service.change_task_status(env.db, 2, task.id, "completed", evidence_required=False)
     assert error.value.status_code == 404
+
+
+@pytest.fixture(autouse=True)
+def evidence_required_by_default(monkeypatch):
+    # a developer's .env may say EVIDENCE_REQUIRED=false (the demo setting);
+    # these tests check the rule of SRS FR-EV-01, so switch it on for every test in this file.
+    # The 5 switch tests pass True or False directly and do not depend on this.
+    monkeypatch.setattr(settings, "evidence_required", True)

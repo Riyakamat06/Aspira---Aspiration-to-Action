@@ -90,5 +90,5 @@ file structure (evidence, resource, attachment, reminder, quiz attempt) are not 
 - `due_date` on tasks is required because `TaskCreate` requires it. Riya confirmed that AI tasks always get a due date.
 - The roadmap `version` and a disclaimer flag are NOT in the table. They are waiting for the exact SRS text (docs/SRS.md is not on GitHub yet).
 - Not decided: should the weekly graph count all roadmap versions or only the active one? The table has no "active" column.
-- SQLite or PostgreSQL is not final. Only `db/session.py` would change.
+- The database address is `settings.database_url` (Riya's `config.py`, set in `.env`), read in `db/session.py`. The two-week demo uses SQLite. PostgreSQL has NOT been tested. Moving to it should mean changing the URL in `.env` and installing the PostgreSQL driver.
 - SQLite `create_all` does not add new columns to an old database file. After a column is added, delete the local `aspira.db` and run `python -m app.db.seed_data` again.

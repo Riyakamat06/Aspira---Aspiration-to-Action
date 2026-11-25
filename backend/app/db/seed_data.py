@@ -2,11 +2,12 @@
 seed_data.py  (M1 Database, owner: Ananya)
 
 What it is for:
-    Adds a small demo user, dream, roadmap, milestone and task, so the
-    app and the tests have starter data to look at.
+    Adds a demo user, dream, roadmap, 2 milestones and 7 tasks in all four
+    statuses (completed, submitted, pending, overdue) with different due dates,
+    so the weekly graph and the task screens have something to show.
 
 Who uses it:
-    You, from the terminal. Not used by the live app.
+    You and Sonali, from the terminal. Not used by the live app.
 
 What it contains:
     seed() - adds the demo rows only if the database has no users yet.
@@ -17,6 +18,7 @@ How to run (from the backend/ folder):
 Note:
     The password below is NOT a real password. It is a placeholder, because
     hashing belongs to Riya's security.py. Do not use this user to log in.
+    Due dates are counted from today, so the demo always looks current.
 """
 
 from datetime import date, timedelta
@@ -55,17 +57,31 @@ def seed() -> None:
         db.add(roadmap)
         db.flush()
 
-        milestone = Milestone(roadmap_id=roadmap.id, title="Learn Python basics", order_index=1)
-        db.add(milestone)
+        m1 = Milestone(roadmap_id=roadmap.id, title="Learn Python basics", order_index=1)
+        m2 = Milestone(roadmap_id=roadmap.id, title="Build and show projects", order_index=2)
+        db.add_all([m1, m2])
         db.flush()
 
-        task = Task(
-            milestone_id=milestone.id,
-            title="Build a small Python project",
-            task_type="project",
-            due_date=date.today() + timedelta(days=14),
-        )
-        db.add(task)
+        today = date.today()
+
+        # (milestone, title, type, status, days from today; minus = in the past)
+        demo_tasks = [
+            (m1, "Finish a Python course", "course", "completed", -20),
+            (m1, "Practise loops and functions", "learning", "completed", -13),
+            (m1, "Solve 10 practice problems", "practical", "completed", -6),
+            (m1, "Take the Python quiz", "learning", "overdue", -9),
+            (m2, "Build a small Python project", "project", "submitted", -2),
+            (m2, "Put the project on GitHub", "project", "pending", 7),
+            (m2, "Make a project demo screenshot", "practical", "pending", 14),
+        ]
+        for milestone, title, task_type, status, days in demo_tasks:
+            db.add(Task(
+                milestone_id=milestone.id,
+                title=title,
+                task_type=task_type,
+                status=status,
+                due_date=today + timedelta(days=days),
+            ))
 
         db.commit()  # save everything at once
         print("Demo data added.")
